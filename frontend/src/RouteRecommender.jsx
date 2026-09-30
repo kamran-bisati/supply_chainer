@@ -113,6 +113,7 @@ const RouteRecommender = ({
   // ---------------------------------------------------------
 
   useEffect(() => {
+
     if (!restoreEntry) {
       return;
     }
@@ -211,6 +212,43 @@ const RouteRecommender = ({
   };
 
   // ---------------------------------------------------------
+  // Quantile helpers
+  // ---------------------------------------------------------
+
+  const getDelayQuantiles = (
+    recommendation
+  ) => {
+
+    const quantiles =
+      recommendation?.delay_quantiles;
+
+    if (!quantiles) {
+      return null;
+    }
+
+    const p50 =
+      Number(
+        quantiles.p50 ?? 0
+      );
+
+    const p85 =
+      Number(
+        quantiles.p85 ?? 0
+      );
+
+    const p95 =
+      Number(
+        quantiles.p95 ?? 0
+      );
+
+    return {
+      p50: Math.max(0, p50),
+      p85: Math.max(0, p85),
+      p95: Math.max(0, p95)
+    };
+  };
+
+  // ---------------------------------------------------------
   // Generate Recommendations
   // ---------------------------------------------------------
 
@@ -305,9 +343,10 @@ const RouteRecommender = ({
 
           saveRouteHistory({
 
-            id: `${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2, 8)}`,
+            id:
+              `${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2, 8)}`,
 
             created_at:
               new Date().toISOString(),
@@ -365,7 +404,9 @@ const RouteRecommender = ({
   // Mode Icon
   // ---------------------------------------------------------
 
-  const getModeIcon = (mode) => {
+  const getModeIcon = (
+    mode
+  ) => {
 
     switch (
       mode.toLowerCase()
@@ -1155,6 +1196,253 @@ const RouteRecommender = ({
                     {rec.explanation}
                   </h3>
 
+                  {/* =========================================================
+                      ML PREDICTED DELAY BAND
+                      ========================================================= */}
+
+                  {getDelayQuantiles(rec) && (() => {
+
+                    const quantiles =
+                      getDelayQuantiles(rec);
+
+                    return (
+
+                      <div
+                        style={{
+                          marginBottom: '1.25rem',
+                          padding: '0.9rem',
+                          border:
+                            '1px solid #1e293b',
+                          borderRadius: '8px',
+                          background:
+                            'rgba(59, 130, 246, 0.04)'
+                        }}
+                      >
+
+                        {/* Header */}
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent:
+                              'space-between',
+                            marginBottom:
+                              '0.7rem'
+                          }}
+                        >
+
+                          <span
+                            style={{
+                              fontSize:
+                                '0.65rem',
+                              fontWeight: 800,
+                              color:
+                                '#94a3b8',
+                              letterSpacing:
+                                '0.06em'
+                            }}
+                          >
+                            PREDICTED DELAY BAND
+                          </span>
+
+                          <span
+                            style={{
+                              fontSize:
+                                '0.6rem',
+                              fontWeight: 700,
+                              color:
+                                '#64748b'
+                            }}
+                          >
+                            ML QUANTILES
+                          </span>
+
+                        </div>
+
+                        {/* Quantile cards */}
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns:
+                              'repeat(3, 1fr)',
+                            gap: '0.5rem'
+                          }}
+                        >
+
+                          {/* P50 */}
+
+                          <div
+                            style={{
+                              padding: '0.65rem',
+                              borderRadius: '6px',
+                              background:
+                                'rgba(148, 163, 184, 0.08)',
+                              border:
+                                '1px solid #334155'
+                            }}
+                          >
+
+                            <div
+                              style={{
+                                fontSize:
+                                  '0.6rem',
+                                fontWeight: 800,
+                                color:
+                                  '#94a3b8'
+                              }}
+                            >
+                              P50
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  '0.2rem',
+                                fontSize:
+                                  '0.95rem',
+                                fontWeight: 800,
+                                color:
+                                  '#f8fafc'
+                              }}
+                            >
+                              {quantiles.p50}h
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  '0.15rem',
+                                fontSize:
+                                  '0.55rem',
+                                color:
+                                  '#64748b'
+                              }}
+                            >
+                              Typical
+                            </div>
+
+                          </div>
+
+                          {/* P85 */}
+
+                          <div
+                            style={{
+                              padding: '0.65rem',
+                              borderRadius: '6px',
+                              background:
+                                'rgba(245, 158, 11, 0.08)',
+                              border:
+                                '1px solid rgba(245, 158, 11, 0.35)'
+                            }}
+                          >
+
+                            <div
+                              style={{
+                                fontSize:
+                                  '0.6rem',
+                                fontWeight: 800,
+                                color:
+                                  '#f59e0b'
+                              }}
+                            >
+                              P85
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  '0.2rem',
+                                fontSize:
+                                  '0.95rem',
+                                fontWeight: 800,
+                                color:
+                                  '#f8fafc'
+                              }}
+                            >
+                              {quantiles.p85}h
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  '0.15rem',
+                                fontSize:
+                                  '0.55rem',
+                                color:
+                                  '#64748b'
+                              }}
+                            >
+                              Risk planning
+                            </div>
+
+                          </div>
+
+                          {/* P95 */}
+
+                          <div
+                            style={{
+                              padding: '0.65rem',
+                              borderRadius: '6px',
+                              background:
+                                'rgba(239, 68, 68, 0.08)',
+                              border:
+                                '1px solid rgba(239, 68, 68, 0.35)'
+                            }}
+                          >
+
+                            <div
+                              style={{
+                                fontSize:
+                                  '0.6rem',
+                                fontWeight: 800,
+                                color:
+                                  '#ef4444'
+                              }}
+                            >
+                              P95
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  '0.2rem',
+                                fontSize:
+                                  '0.95rem',
+                                fontWeight: 800,
+                                color:
+                                  '#f8fafc'
+                              }}
+                            >
+                              {quantiles.p95}h
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop:
+                                  '0.15rem',
+                                fontSize:
+                                  '0.55rem',
+                                color:
+                                  '#64748b'
+                              }}
+                            >
+                              High-risk tail
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    );
+
+                  })()}
+
+                  {/* Route Legs */}
+
                   <div
                     style={{
                       display: 'flex',
@@ -1388,9 +1676,9 @@ const RouteRecommender = ({
                 {' '}
                 {
                   recommendations[0]
-                    .audit_trace
-                    .eta
-                    .transit
+                    ?.audit_trace
+                    ?.eta
+                    ?.transit ?? 0
                 }h
               </div>
 
@@ -1399,9 +1687,9 @@ const RouteRecommender = ({
                 {' +'}
                 {
                   recommendations[0]
-                    .audit_trace
-                    .eta
-                    .transfer
+                    ?.audit_trace
+                    ?.eta
+                    ?.transfer ?? 0
                 }h
               </div>
 
@@ -1409,13 +1697,81 @@ const RouteRecommender = ({
                 Scenario Impact:
                 {' '}
                 {
-                  recommendations[0]
-                    .audit_trace
-                    .eta
-                    .scenario > 0
-                    ? `+${recommendations[0].audit_trace.eta.scenario}h`
+                  (recommendations[0]
+                    ?.audit_trace
+                    ?.eta
+                    ?.scenario ?? 0) > 0
+
+                    ? `+${
+                        recommendations[0]
+                          ?.audit_trace
+                          ?.eta
+                          ?.scenario ?? 0
+                      }h`
+
                     : 'None'
                 }
+              </div>
+
+              {/* =====================================================
+                  ROUTE LEVEL QUANTILES
+                  ===================================================== */}
+
+              <div
+                style={{
+                  marginTop:
+                    '0.35rem',
+                  paddingTop:
+                    '0.35rem',
+                  borderTop:
+                    '1px solid #1e293b'
+                }}
+              >
+
+                P50 Delay:
+                {' '}
+
+                <strong>
+                  {
+                    recommendations[0]
+                      ?.audit_trace
+                      ?.eta
+                      ?.p50 ?? 0
+                  }h
+                </strong>
+
+              </div>
+
+              <div>
+
+                P85 Delay:
+                {' '}
+
+                <strong>
+                  {
+                    recommendations[0]
+                      ?.audit_trace
+                      ?.eta
+                      ?.p85 ?? 0
+                  }h
+                </strong>
+
+              </div>
+
+              <div>
+
+                P95 Delay:
+                {' '}
+
+                <strong>
+                  {
+                    recommendations[0]
+                      ?.audit_trace
+                      ?.eta
+                      ?.p95 ?? 0
+                  }h
+                </strong>
+
               </div>
 
             </div>
@@ -1444,52 +1800,58 @@ const RouteRecommender = ({
               <div>
                 Landed Base:
                 {' '}
+
                 {formatCurrency(
                   recommendations[0]
                     .audit_cost
                     ?.transit ??
                     recommendations[0]
-                      .audit_trace
-                      .cost
-                      .transit,
+                      ?.audit_trace
+                      ?.cost
+                      ?.transit,
                   recommendations[0]
-                    .display_currency ||
+                    ?.display_currency ||
                     currency
                 )}
+
               </div>
 
               <div>
                 Transfer Fees:
                 {' '}
+
                 {formatCurrency(
                   recommendations[0]
                     .audit_cost
                     ?.transfer ??
                     recommendations[0]
-                      .audit_trace
-                      .cost
-                      .transfer,
+                      ?.audit_trace
+                      ?.cost
+                      ?.transfer,
                   recommendations[0]
-                    .display_currency ||
+                    ?.display_currency ||
                     currency
                 )}
+
               </div>
 
               <div>
                 Risk Premium:
                 {' '}
+
                 {formatCurrency(
                   recommendations[0]
                     .audit_cost
                     ?.scenario ??
                     recommendations[0]
-                      .audit_trace
-                      .cost
-                      .scenario,
+                      ?.audit_trace
+                      ?.cost
+                      ?.scenario,
                   recommendations[0]
-                    .display_currency ||
+                    ?.display_currency ||
                     currency
                 )}
+
               </div>
 
               <div
@@ -1512,9 +1874,9 @@ const RouteRecommender = ({
                     .audit_cost
                     ?.total ??
                     recommendations[0]
-                      .total_cost,
+                      ?.total_cost,
                   recommendations[0]
-                    .display_currency ||
+                    ?.display_currency ||
                     currency
                 )}
 
@@ -1541,7 +1903,7 @@ const RouteRecommender = ({
                 {' '}
                 {
                   recommendations[0]
-                    .display_currency ||
+                    ?.display_currency ||
                   currency
                 }
 
