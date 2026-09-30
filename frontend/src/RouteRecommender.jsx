@@ -8,7 +8,13 @@ import {
   Activity, Layers, Terminal
 } from 'lucide-react';
 
-const RouteRecommender = ({ onNavigate }) => {
+import { saveRouteHistory } from './RouteHistory.jsx';
+
+const RouteRecommender = ({
+  onNavigate,
+  restoreEntry,
+  onRestoreConsumed,
+}) => {
 
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
@@ -101,6 +107,71 @@ const RouteRecommender = ({ onNavigate }) => {
       );
 
   }, []);
+
+  // ---------------------------------------------------------
+  // Restore Route From History
+  // ---------------------------------------------------------
+
+  useEffect(() => {
+    if (!restoreEntry) {
+      return;
+    }
+
+    setSource(
+      restoreEntry.source || ''
+    );
+
+    setDestination(
+      restoreEntry.destination || ''
+    );
+
+    setTransportMode(
+      restoreEntry.transportMode || 'any'
+    );
+
+    setRoutingPolicy(
+      restoreEntry.routingPolicy || 'STRICT'
+    );
+
+    setOperationalConfig(
+      restoreEntry.operationalConfig || 'NORMAL'
+    );
+
+    setCargoType(
+      restoreEntry.cargoType || 'general'
+    );
+
+    setPriority(
+      restoreEntry.priority || 'normal'
+    );
+
+    setCurrency(
+      restoreEntry.currency || 'USD'
+    );
+
+    setSearchQuery({
+      source:
+        restoreEntry.origin_display ||
+        restoreEntry.source ||
+        '',
+
+      dest:
+        restoreEntry.destination_display ||
+        restoreEntry.destination ||
+        ''
+    });
+
+    setRecommendations(
+      restoreEntry.recommendations || []
+    );
+
+    setError(null);
+
+    if (onRestoreConsumed) {
+      onRestoreConsumed();
+    }
+
+  }, [restoreEntry, onRestoreConsumed]);
 
   // ---------------------------------------------------------
   // Currency formatter
@@ -219,9 +290,59 @@ const RouteRecommender = ({ onNavigate }) => {
 
       } else {
 
+        const newRecommendations =
+          data.recommendations || [];
+
         setRecommendations(
-          data.recommendations || []
+          newRecommendations
         );
+
+        // -------------------------------------------------------
+        // Save successful route decision to Route History
+        // -------------------------------------------------------
+
+        if (newRecommendations.length > 0) {
+
+          saveRouteHistory({
+
+            id: `${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2, 8)}`,
+
+            created_at:
+              new Date().toISOString(),
+
+            source,
+
+            destination,
+
+            origin_display:
+              searchQuery.source || source,
+
+            destination_display:
+              searchQuery.dest || destination,
+
+            transportMode,
+
+            routingPolicy,
+
+            operationalConfig,
+
+            cargoType,
+
+            priority,
+
+            currency,
+
+            active_scenario:
+              data.active_scenario || null,
+
+            recommendations:
+              newRecommendations
+
+          });
+
+        }
 
       }
 
@@ -502,21 +623,47 @@ const RouteRecommender = ({ onNavigate }) => {
 
           </div>
 
-          <button
-            className="sc-badge-active"
-            onClick={() =>
-              onNavigate('suppliers')
-            }
+          <div
             style={{
-              cursor: 'pointer'
+              display: 'flex',
+              gap: '0.6rem',
+              alignItems: 'center'
             }}
           >
 
-            <ShieldCheck size={14} />
+            <button
+              className="sc-badge-active"
+              onClick={() =>
+                onNavigate('history')
+              }
+              style={{
+                cursor: 'pointer'
+              }}
+            >
 
-            SUPPLIER INTELLIGENCE
+              <Clock size={14} />
 
-          </button>
+              ROUTE HISTORY
+
+            </button>
+
+            <button
+              className="sc-badge-active"
+              onClick={() =>
+                onNavigate('suppliers')
+              }
+              style={{
+                cursor: 'pointer'
+              }}
+            >
+
+              <ShieldCheck size={14} />
+
+              SUPPLIER INTELLIGENCE
+
+            </button>
+
+          </div>
 
         </div>
 
